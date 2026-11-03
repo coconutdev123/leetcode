@@ -1,0 +1,72 @@
+
+#include <unordered_map>
+#include <list>
+using namespace std;
+
+class LRUCache {
+private:
+    struct Node {
+        int key;
+        int value;
+        Node* prev;
+        Node* next;
+        Node(int k, int v) : key(k), value(v), prev(nullptr), next(nullptr) {}
+    };
+    int capacity;
+    unordered_map<int, Node*> cache; // key->node
+    Node* head;
+    Node* tail;
+
+    void remove(Node* node){
+        node->prev->next = node->next;
+        node->next->prev = node->prev;
+    }
+
+    void addtohead(Node* node){
+        node->next = head->next;
+        node->prev = head;
+        head->next = node;
+        node->next->prev = node;
+    }
+    void moveToHead(Node* node){
+        remove(node);
+        addtohead(node);
+    }
+
+
+public:
+    LRUCache(int capacity) {
+        this->capacity = capacity;
+        head = new Node(0, 0);
+        tail = new Node(0, 0);
+        head->next = tail;
+        tail->prev = head;
+    }
+    
+    int get(int key) {
+        if (cache.find(key) == cache.end()){
+            return -1;
+        }
+        Node* node = cache[key];
+        moveToHead(node);
+        return node->value;
+    }
+    
+    void put(int key, int value) {
+        if (cache.find(key) == cache.end()){
+            Node* node = new Node(key, value);
+            cache[key] = node;
+            addtohead(node);
+            if (cache.size() > capacity){
+                Node* last = tail->prev;
+                remove(last);
+                cache.erase(last->key);
+                delete last;
+            }
+        } else {
+            Node* node = cache[key];
+            node->value = value;
+            moveToHead(node);
+        }
+    }
+};
